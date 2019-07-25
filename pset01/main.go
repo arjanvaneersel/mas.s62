@@ -24,6 +24,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"math/rand"
 )
 
 func main() {
@@ -108,9 +109,9 @@ func HexToPubkey(s string) (PublicKey, error) {
 	expectedLength := 256 * 2 * 64 // 256 blocks long, 2 rows, 64 hex char per block
 
 	// first, make sure hex string is of correct length
-	if len(s) != expectedLength {
+	if l := len(s); l != expectedLength {
 		return p, fmt.Errorf(
-			"Pubkey string %d characters, expect %d", expectedLength)
+			"Pubkey string %d characters, expect %d", l, expectedLength)
 	}
 
 	// decode from hex to a byte slice
@@ -186,9 +187,9 @@ func HexToSignature(s string) (Signature, error) {
 	expectedLength := 256 * 64 // 256 blocks long, 1 row, 64 hex char per block
 
 	// first, make sure hex string is of correct length
-	if len(s) != expectedLength {
+	if l := len(s); l != expectedLength {
 		return sig, fmt.Errorf(
-			"Pubkey string %d characters, expect %d", expectedLength)
+			"Pubkey string %d characters, expect %d", l, expectedLength)
 	}
 
 	// decode from hex to a byte slice
@@ -222,6 +223,30 @@ func GenerateKey() (SecretKey, PublicKey, error) {
 
 	// Your code here
 	// ===
+
+	// randPair returns a random block pair representing a private and public key
+	randPair := func() (Block, Block) {
+		b := make([]byte, 32)
+		rand.Read(b)
+		return BlockFromByteSlice(b), Block(sha256.Sum256(b))
+	}
+
+	// Create a loop to fill sec and pub
+	for i := 0; i < 256; i++ {
+		// Fill the zero ranges
+		{
+			s, p := randPair()
+			sec.ZeroPre[i] = s
+			pub.ZeroHash[i] = p
+		}
+
+		// Fill the one ranges
+		{
+			s, p := randPair()
+			sec.OnePre[i] = s
+			pub.OneHash[i] = p
+		}
+	}
 
 	// ===
 	return sec, pub, nil
