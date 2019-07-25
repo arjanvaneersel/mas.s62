@@ -259,6 +259,17 @@ func Sign(msg Message, sec SecretKey) Signature {
 	// Your code here
 	// ===
 
+	// Create a representation of the bytes
+
+	for i, b := range msg {
+		switch fmt.Sprintf("%08b", b)[0] {
+		case '0':
+			sig.Preimage[i] = sec.ZeroPre[i]
+		case '1':
+			sig.Preimage[i] = sec.OnePre[i]
+		}
+	}
+
 	// ===
 	return sig
 }
@@ -269,6 +280,19 @@ func Verify(msg Message, pub PublicKey, sig Signature) bool {
 
 	// Your code here
 	// ===
+
+	for i, b := range msg {
+		switch fmt.Sprintf("%08b", b)[0] {
+		case '0':
+			if sig.Preimage[i].Hash() != pub.ZeroHash[i] {
+				return false
+			}
+		case '1':
+			if sig.Preimage[i].Hash() != pub.OneHash[i] {
+				return false
+			}
+		}
+	}
 
 	// ===
 
